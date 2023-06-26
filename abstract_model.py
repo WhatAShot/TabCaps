@@ -32,8 +32,8 @@ from sklearn.utils import check_array
 import warnings
 
 @dataclass
-class DANsModel(BaseEstimator):
-    """ Class for DANsModel model.
+class TabCapsModel(BaseEstimator):
+    """ Class for TabCapsModel model.
         Code Architecture modify from Source: https://github.com/dreamquark-ai/tabnet
     """
     decode: bool = False
@@ -96,7 +96,6 @@ class DANsModel(BaseEstimator):
         y_train,
         eval_set=None,
         eval_name=None,
-        missing_ind=None,
         eval_metric=None,
         max_epochs=100,
         patience=10,
@@ -161,7 +160,7 @@ class DANsModel(BaseEstimator):
         # Validate and reformat eval set depending on training data
         eval_names, eval_set = validate_eval_set(eval_set, eval_name, X_train, y_train)
 
-        train_dataloader, valid_dataloaders = self._construct_loaders(X_train, y_train, eval_set, missing_ind)
+        train_dataloader, valid_dataloaders = self._construct_loaders(X_train, y_train, eval_set)
 
         self._set_network()
         self._set_metrics(eval_metric, eval_names)
@@ -252,7 +251,7 @@ class DANsModel(BaseEstimator):
         torch.save(save_dict, self.log.log_dir + '/checkpoint.pth')
 
     def load_model(self, filepath, input_dim, output_dim):
-        """Load DANet model.
+        """Load model.
 
         Parameters
         ----------
@@ -293,7 +292,7 @@ class DANsModel(BaseEstimator):
         self.history.epoch_metrics.update(epoch_logs)
         return
 
-    def _train_batch(self, X, y, missing_ind=None):
+    def _train_batch(self, X, y):
         """
         Trains one batch of data
 
@@ -314,18 +313,13 @@ class DANsModel(BaseEstimator):
         batch_logs = {"batch_size": X.shape[0]}
         X = X.to(self.device).float()
         y = y.to(self.device).long()
-        if missing_ind != None:
-            missing_ind = missing_ind.to(self.device).long()
         self._optimizer.zero_grad()
         y_one_hot = F.one_hot(y, self.output_dim).float()
 
         recon_loss = 0.
         if self.decode:
             pred, reconstruction = self.network(X, y_one_hot)
-            if missing_ind != None:
-                recon_loss = ((reconstruction - X) ** 2 * (1 - missing_ind)).sum()
-            else:
-                recon_loss = F.mse_loss(reconstruction, X, reduction='sum')
+            recon_loss = F.mse_loss(reconstruction, X, reduction='sum')
         else:
             pred = self.network(X)
 
@@ -516,7 +510,7 @@ class DANsModel(BaseEstimator):
         """Setup optimizer."""
         self._optimizer = self.optimizer_fn(self.network.parameters(), **self.optimizer_params)
 
-    def _construct_loaders(self, X_train, y_train, eval_set, missing_ind=None):
+    def _construct_loaders(self, X_train, y_train, eval_set):
         """Generate dataloaders for train and eval set.
 
         Parameters
@@ -547,7 +541,6 @@ class DANsModel(BaseEstimator):
         train_dataloader, valid_dataloaders = create_dataloaders(
             X_train,
             y_train_mapped,
-            missing_ind,
             eval_set,
             self.batch_size
         )

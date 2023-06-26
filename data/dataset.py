@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import QuantileTransformer, LabelEncoder
 from category_encoders import LeaveOneOutEncoder
-from sklearn.impute import MissingIndicator
 from sklearn.model_selection import train_test_split
 import random
 random.seed(1)
@@ -250,31 +249,6 @@ def get_data(datasetname, sub=False):
         print('Use T-SNE subset')
     data_pool = Dataset(sub)
     return getattr(data_pool, datasetname)()
-
-def create_missing_value(data, threshold=0.2):
-    missing_data = np.copy(data)
-    mean = np.mean(data, axis=0)
-    missing_space = int(missing_data.size * threshold)
-    # for i in range(data.shape[0]):
-    #     ratio = random.randint(1, 2)
-    #     choose = random.choices(range(data.shape[1]),k=ratio)
-    #     missing_data[i, choose] = np.nan
-    for _ in range(missing_space):
-        rand_x = random.randint(0, missing_data.shape[0]-1)
-        rand_y = random.randint(0, missing_data.shape[1]-1)
-        missing_data[rand_x, rand_y] = np.nan
-    indicator = MissingIndicator(missing_values=np.nan)
-    ind = indicator.fit_transform(missing_data)
-    missing_data = pd.DataFrame(missing_data)
-    for i, m in enumerate(mean):
-        col = missing_data.loc[:, i]
-        col = col.fillna(m)
-        missing_data.loc[:, i] = col
-    # missing_data.to_csv('./data/diabetes/missing_data.csv')
-    # missing_data = pd.read_csv('./data/missing_data.csv').values
-    # ind = pd.read_csv('./data/missing_ind.csv').values
-    # ind = (1 - ind).astype(bool)
-    return missing_data.values, ind.astype(np.int)
 
 if __name__ == '__main__':
     a = get_data('epsilon')

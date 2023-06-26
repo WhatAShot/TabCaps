@@ -84,7 +84,7 @@ class PredictDataset(Dataset):
         y = self.y[index]
         return (x, y)
 
-def create_dataloaders(X_train, y_train, missing_ind, eval_set, batch_size):
+def create_dataloaders(X_train, y_train, eval_set, batch_size):
     """
     Create dataloaders with or without subsampling depending on weights and balanced.
 
@@ -105,10 +105,7 @@ def create_dataloaders(X_train, y_train, missing_ind, eval_set, batch_size):
     """
     X_train = torch.from_numpy(X_train).float()
     y_train = torch.from_numpy(y_train)
-    if isinstance(missing_ind, np.ndarray):
-        train_dataloader = FastTensorDataLoader(X_train, y_train, torch.from_numpy(missing_ind), batch_size=batch_size, shuffle=True)
-    else:
-        train_dataloader = FastTensorDataLoader(X_train, y_train, batch_size=batch_size, shuffle=True)
+    train_dataloader = FastTensorDataLoader(X_train, y_train, batch_size=batch_size, shuffle=True)
 
     valid_dataloaders = []
     for tuple in eval_set:
@@ -123,7 +120,7 @@ def create_dataloaders(X_train, y_train, missing_ind, eval_set, batch_size):
     return train_dataloader, valid_dataloaders
 
 
-def validate_eval_set(eval_set, eval_name, X_train, y_train, missing_ind=None):
+def validate_eval_set(eval_set, eval_name, X_train, y_train):
     """Check if the shapes of eval_set are compatible with (X_train, y_train).
 
     Parameters
@@ -187,10 +184,6 @@ def validate_eval_set(eval_set, eval_name, X_train, y_train, missing_ind=None):
         )
         assert X.shape[0] == y.shape[0], msg
 
-    # if missing_ind != None:
-    #     for index, m in enumerate(eval_missing_ind):
-    #         new_tuple = (eval_set[index][0], eval_set[index][1], eval_missing_ind[index])
-    #         eval_set[index] = new_tuple
     return eval_name, eval_set
 
 
