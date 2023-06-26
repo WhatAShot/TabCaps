@@ -1,4 +1,4 @@
-from DAN_Task import DANetClassifier
+from TabCaps_Task import TabCapsClassifier
 import os
 import numpy as np
 import torch
@@ -32,7 +32,7 @@ def hyperopt_objective(params):
     print(params)
     save_params(params)
     torch.cuda.empty_cache()
-    clf = DANetClassifier(
+    clf = TabCapsClassifier(
         optimizer_fn=QHAdam,
         optimizer_params=dict(lr=params['lr'], weight_decay=1e-5, nus=(0.7, 0.99), betas=(0.95, 0.998)),
         scheduler_params=dict(gamma=0.95, step_size=20),

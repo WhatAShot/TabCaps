@@ -32,8 +32,8 @@ from sklearn.utils import check_array
 import warnings
 
 @dataclass
-class DANsModel(BaseEstimator):
-    """ Class for DANsModel model.
+class TabCapsModel(BaseEstimator):
+    """ Class for TabCapsModel model.
         Code Architecture modify from Source: https://github.com/dreamquark-ai/tabnet
     """
     decode: bool = False
@@ -251,7 +251,7 @@ class DANsModel(BaseEstimator):
         torch.save(save_dict, self.log.log_dir + '/checkpoint.pth')
 
     def load_model(self, filepath, input_dim, output_dim):
-        """Load DANet model.
+        """Load model.
 
         Parameters
         ----------
